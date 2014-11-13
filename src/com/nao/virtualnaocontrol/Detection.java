@@ -21,6 +21,7 @@ import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.SurfaceView;
 import android.view.WindowManager;
 import android.widget.Toast;
@@ -28,7 +29,7 @@ import android.widget.Toast;
 public class Detection extends Activity implements CvCameraViewListener2 {
 
 	private final float ROBOT_HEIGHT = 580; // Exprimé en mm
-	
+
 	private CameraBridgeViewBase mOpenCvCameraView;
 	private boolean mIsJavaCamera = true;
 	private MenuItem mItemSwitchCamera = null;
@@ -37,6 +38,9 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 	private static Sensor magnetometer;
 	private static float[] mGravity;
 	private static float[] mGeomagnetic;
+
+	private static float touchScreenPositionX;
+	private static float touchScreenPositionY;
 
 	private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
 
@@ -142,6 +146,18 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 		return inputFrame.rgba();
 	}
 
+	@Override
+	public boolean onTouchEvent(MotionEvent event) {
+
+		// Récupération de la position du clique sur l'écran
+		if (event.getAction() == MotionEvent.ACTION_DOWN) {
+			touchScreenPositionX = event.getX();
+			touchScreenPositionY = event.getY();
+		}
+
+		return super.onTouchEvent(event);
+	}
+
 	public void detection(DisplayMetrics displayMetrics) {
 
 		MatOfFloat intrinsicParametersMatrix = buildIntrinsicParametersMatrix(displayMetrics);
@@ -159,8 +175,8 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 		float focalLengthInPixel = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_MM, focalLength, displayMetrics);
 
 		// Coordonnées du centre de l'écran dans notre repère
-		float centreX = 0;
-		float centreY = 0;
+		float centreX = (float) (displayMetrics.widthPixels / 2);
+		float centreY = (float) (displayMetrics.heightPixels / 2);
 
 		// Ajout des composants à la matrice
 		cameraMatrix.put(0, 0, focalLengthInPixel);
@@ -222,7 +238,7 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 		float ty = 0.0f;
 		float tz = 0.0f;
 
-		// Récupération des paramètres de position du robot par rapprt à l'appareil
+		// Récupération des paramètres de position du robot par rapport à l'appareil
 
 		// Ajout des composants de translation de la matrice
 		extrinsicParametersMatrix.put(2, 0, tx);
