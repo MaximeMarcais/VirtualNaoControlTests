@@ -16,7 +16,7 @@ import android.view.SurfaceView;
 import android.view.WindowManager;
 import android.widget.Toast;
 
-public class Camera extends Activity implements CvCameraViewListener2 {
+public class Capture extends Activity implements CvCameraViewListener2 {
 
 	private CameraBridgeViewBase mOpenCvCameraView;
 	private boolean mIsJavaCamera = true;
@@ -38,7 +38,7 @@ public class Camera extends Activity implements CvCameraViewListener2 {
 		}
 	};
 
-	public Camera() {
+	public Capture() {
 	}
 
 	/** Called when the activity is first created. */

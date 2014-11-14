@@ -1,17 +1,15 @@
 package com.nao.virtualnaocontrol;
 
+import org.jscience.mathematics.vector.Float64Matrix;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfFloat;
 
 import android.app.Activity;
-import android.hardware.Camera;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -28,7 +26,11 @@ import android.widget.Toast;
 
 public class Detection extends Activity implements CvCameraViewListener2 {
 
-	private final float ROBOT_HEIGHT = 580; // Exprimé en mm
+	private final static float ROBOT_HEIGHT = 580; // Exprimé en mm
+	private final static float CAMERA_FOCAL_LENGTH = 3.43f; // Exprimée en mm
+	private final static float CAMERA_HEIGHT_FROM_GROUND = 1500; // Exprimée en mm // TODO : le calculer
+	private final static float ROBOT_HEIGHT_ON_SCREEN = 50;
+	private final static float DISTANCE_ROBOT_IMAGE_FROM_CENTER = 10;
 
 	private CameraBridgeViewBase mOpenCvCameraView;
 	private boolean mIsJavaCamera = true;
@@ -39,6 +41,7 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 	private static float[] mGravity;
 	private static float[] mGeomagnetic;
 
+	// private static Camera.Parameters cameraParameters;
 	private static float touchScreenPositionX;
 	private static float touchScreenPositionY;
 
@@ -66,6 +69,7 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 	public void onCreate(Bundle savedInstanceState) {
 		System.out.println("VNCTests : onCreate");
 		super.onCreate(savedInstanceState);
+
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
 		setContentView(R.layout.activity_main);
@@ -139,7 +143,7 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 
 	public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
 
-		System.out.println("VNCTests : onCameraFrame");
+		// System.out.println("VNCTests : onCameraFrame");
 		detection(getResources().getDisplayMetrics());
 
 		// Affichage
@@ -149,50 +153,48 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
 
+		 System.out.println("VNCTests : onTouchEvent");
+
 		// Récupération de la position du clique sur l'écran
-		if (event.getAction() == MotionEvent.ACTION_DOWN) {
-			touchScreenPositionX = event.getX();
-			touchScreenPositionY = event.getY();
-		}
+		 if (event.getAction() == MotionEvent.ACTION_DOWN) {
+		 touchScreenPositionX = event.getX();
+		 touchScreenPositionY = event.getY();
+		 System.out.println("VNCTests : touchScreenPositionX=" + touchScreenPositionX);
+		 System.out.println("VNCTests : touchScreenPositionY=" + touchScreenPositionY);
+		 }
 
 		return super.onTouchEvent(event);
 	}
 
 	public void detection(DisplayMetrics displayMetrics) {
 
-		MatOfFloat intrinsicParametersMatrix = buildIntrinsicParametersMatrix(displayMetrics);
-		MatOfFloat extrinsicParametersMatrix = buildExtrinsicParametersMatrix((SensorManager) getSystemService(SENSOR_SERVICE));
+		Float64Matrix intrinsicParametersMatrix = buildIntrinsicParametersMatrix(displayMetrics);
+		Float64Matrix extrinsicParametersMatrix = buildExtrinsicParametersMatrix((SensorManager) getSystemService(SENSOR_SERVICE));
+
 	}
 
-	protected static MatOfFloat buildIntrinsicParametersMatrix(DisplayMetrics displayMetrics) {
+	protected static Float64Matrix buildIntrinsicParametersMatrix(DisplayMetrics displayMetrics) {
 
-		// Initialisation de la matrice des paramètres intrinsèques à la caméra
-		MatOfFloat cameraMatrix = (MatOfFloat) MatOfFloat.zeros(3, 3, CvType.CV_32F);
+		// System.out.println("VNCTests : buildIntrinsicParametersMatrix");
 
-		// Récupération de la focale en pixels
-		Camera camera = Camera.open();
-		float focalLength = camera.getParameters().getFocalLength();
-		float focalLengthInPixel = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_MM, focalLength, displayMetrics);
-
+		// // Récupération de la focale en pixels
+		// float focalLength = cameraParameters.getFocalLength();
+		float focalLengthInPixel = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_MM, CAMERA_FOCAL_LENGTH, displayMetrics);
 		// Coordonnées du centre de l'écran dans notre repère
 		float centreX = (float) (displayMetrics.widthPixels / 2);
 		float centreY = (float) (displayMetrics.heightPixels / 2);
 
-		// Ajout des composants à la matrice
-		cameraMatrix.put(0, 0, focalLengthInPixel);
-		cameraMatrix.put(1, 1, focalLengthInPixel);
-		cameraMatrix.put(0, 2, centreX);
-		cameraMatrix.put(1, 2, centreY);
-		cameraMatrix.put(2, 2, 1);
+		// Initialisation de la matrice des paramètres intrinsèques à la caméra et ajout des composants à la matrice
+		double[][] tempMatrix = { { focalLengthInPixel, 0.0f, centreX }, { 0.0f, focalLengthInPixel, centreY }, { 0.0f, 0.0f, 1.0f } };
+		Float64Matrix intrinsicParametersMatrix = Float64Matrix.valueOf(tempMatrix);
 
-		return cameraMatrix;
+		return intrinsicParametersMatrix;
 
 	}
 
-	protected static MatOfFloat buildExtrinsicParametersMatrix(SensorManager mSensorManager) {
+	protected static Float64Matrix buildExtrinsicParametersMatrix(SensorManager mSensorManager) {
 
-		// Initialisation de la matrice de paramètres extrinsèques
-		MatOfFloat extrinsicParametersMatrix = (MatOfFloat) MatOfFloat.zeros(3, 4, CvType.CV_32F);
+		// System.out.println("VNCTests : buildExtrinsicParametersMatrix");
 
 		// Initialisation du sensor manager
 		init(mSensorManager);
@@ -208,7 +210,7 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 			float I[] = new float[9];
 
 			boolean success = SensorManager.getRotationMatrix(R, I, mGravity, mGeomagnetic);
-			System.out.println("VNCTests : Orientation success = " + success);
+			// System.out.println("VNCTests : Orientation success = " + success);
 			if (success) {
 				float orientation[] = new float[3];
 				SensorManager.getOrientation(R, orientation);
@@ -222,28 +224,18 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 			}
 		}
 
-		// Ajout des composants de rotation de la matrice
-		extrinsicParametersMatrix.put(0, 0, Math.cos(azimuth) * Math.cos(roll));
-		extrinsicParametersMatrix.put(0, 1, Math.cos(azimuth) * Math.sin(roll) * Math.sin(pitch) - Math.sin(azimuth) * Math.cos(pitch));
-		extrinsicParametersMatrix.put(0, 2, Math.cos(azimuth) * Math.sin(roll) * Math.cos(pitch) + Math.sin(azimuth) * Math.sin(pitch));
-		extrinsicParametersMatrix.put(1, 0, Math.sin(azimuth) * Math.cos(roll));
-		extrinsicParametersMatrix.put(1, 1, Math.sin(azimuth) * Math.sin(roll) * Math.sin(pitch) + Math.cos(azimuth) * Math.cos(pitch));
-		extrinsicParametersMatrix.put(1, 2, Math.sin(azimuth) * Math.sin(roll) * Math.cos(pitch) - Math.cos(azimuth) * Math.sin(pitch));
-		extrinsicParametersMatrix.put(2, 0, -Math.sin(roll));
-		extrinsicParametersMatrix.put(2, 1, Math.cos(roll) * Math.sin(pitch));
-		extrinsicParametersMatrix.put(2, 2, Math.cos(roll) * Math.cos(pitch));
-
 		// Initialisation des valeurs de position de l'appareil
-		float tx = 0.0f;
-		float ty = 0.0f;
-		float tz = 0.0f;
+		float thalesProportion = ROBOT_HEIGHT_ON_SCREEN / ROBOT_HEIGHT;
+		float distanceRobotImageFromFocal = (float) Math.sqrt(CAMERA_FOCAL_LENGTH * CAMERA_FOCAL_LENGTH + DISTANCE_ROBOT_IMAGE_FROM_CENTER * DISTANCE_ROBOT_IMAGE_FROM_CENTER);
+		float distanceRobotFromFocal = distanceRobotImageFromFocal * ROBOT_HEIGHT / ROBOT_HEIGHT_ON_SCREEN;
 
-		// Récupération des paramètres de position du robot par rapport à l'appareil
+		float tx = (float) Math.sqrt(distanceRobotFromFocal * distanceRobotFromFocal - CAMERA_HEIGHT_FROM_GROUND * CAMERA_HEIGHT_FROM_GROUND);
+		float ty = DISTANCE_ROBOT_IMAGE_FROM_CENTER * ROBOT_HEIGHT / ROBOT_HEIGHT_ON_SCREEN;
+		float tz = CAMERA_HEIGHT_FROM_GROUND;
 
-		// Ajout des composants de translation de la matrice
-		extrinsicParametersMatrix.put(2, 0, tx);
-		extrinsicParametersMatrix.put(2, 1, ty);
-		extrinsicParametersMatrix.put(2, 2, tz);
+		// Initialisation de la matrice de paramètres extrinsèques et ajout des composants de rotation et de translation à la matrice
+		double[][] tempMatrix = { { Math.cos(azimuth) * Math.cos(roll), Math.cos(azimuth) * Math.sin(roll) * Math.sin(pitch) - Math.sin(azimuth) * Math.cos(pitch), Math.cos(azimuth) * Math.sin(roll) * Math.cos(pitch) + Math.sin(azimuth) * Math.sin(pitch), tx }, { Math.sin(azimuth) * Math.cos(roll), Math.sin(azimuth) * Math.sin(roll) * Math.sin(pitch) + Math.cos(azimuth) * Math.cos(pitch), Math.sin(azimuth) * Math.sin(roll) * Math.cos(pitch) - Math.cos(azimuth) * Math.sin(pitch), ty }, { -Math.sin(roll), Math.cos(roll) * Math.sin(pitch), Math.cos(roll) * Math.cos(pitch), tz } };
+		Float64Matrix extrinsicParametersMatrix = Float64Matrix.valueOf(tempMatrix);
 
 		return extrinsicParametersMatrix;
 	}
