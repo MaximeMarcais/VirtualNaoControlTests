@@ -153,15 +153,13 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
 
-		 System.out.println("VNCTests : onTouchEvent");
+		System.out.println("VNCTests : onTouchEvent");
 
 		// Récupération de la position du clique sur l'écran
-		 if (event.getAction() == MotionEvent.ACTION_DOWN) {
-		 touchScreenPositionX = event.getX();
-		 touchScreenPositionY = event.getY();
-		 System.out.println("VNCTests : touchScreenPositionX=" + touchScreenPositionX);
-		 System.out.println("VNCTests : touchScreenPositionY=" + touchScreenPositionY);
-		 }
+		if (event.getAction() == MotionEvent.ACTION_DOWN) {
+			touchScreenPositionX = event.getX();
+			touchScreenPositionY = event.getY();
+		}
 
 		return super.onTouchEvent(event);
 	}
@@ -170,6 +168,7 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 
 		Float64Matrix intrinsicParametersMatrix = buildIntrinsicParametersMatrix(displayMetrics);
 		Float64Matrix extrinsicParametersMatrix = buildExtrinsicParametersMatrix((SensorManager) getSystemService(SENSOR_SERVICE));
+		Float64Matrix projectionPointCoordinates = buildProjectionPointCoordinates();
 
 	}
 
@@ -186,9 +185,8 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 
 		// Initialisation de la matrice des paramètres intrinsèques à la caméra et ajout des composants à la matrice
 		double[][] tempMatrix = { { focalLengthInPixel, 0.0f, centreX }, { 0.0f, focalLengthInPixel, centreY }, { 0.0f, 0.0f, 1.0f } };
-		Float64Matrix intrinsicParametersMatrix = Float64Matrix.valueOf(tempMatrix);
 
-		return intrinsicParametersMatrix;
+		return Float64Matrix.valueOf(tempMatrix);
 
 	}
 
@@ -225,19 +223,22 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 		}
 
 		// Initialisation des valeurs de position de l'appareil
-		float thalesProportion = ROBOT_HEIGHT_ON_SCREEN / ROBOT_HEIGHT;
 		float distanceRobotImageFromFocal = (float) Math.sqrt(CAMERA_FOCAL_LENGTH * CAMERA_FOCAL_LENGTH + DISTANCE_ROBOT_IMAGE_FROM_CENTER * DISTANCE_ROBOT_IMAGE_FROM_CENTER);
 		float distanceRobotFromFocal = distanceRobotImageFromFocal * ROBOT_HEIGHT / ROBOT_HEIGHT_ON_SCREEN;
-
-		float tx = (float) Math.sqrt(distanceRobotFromFocal * distanceRobotFromFocal - CAMERA_HEIGHT_FROM_GROUND * CAMERA_HEIGHT_FROM_GROUND);
+		float tx = (float) -Math.sqrt(distanceRobotFromFocal * distanceRobotFromFocal - CAMERA_HEIGHT_FROM_GROUND * CAMERA_HEIGHT_FROM_GROUND);
 		float ty = DISTANCE_ROBOT_IMAGE_FROM_CENTER * ROBOT_HEIGHT / ROBOT_HEIGHT_ON_SCREEN;
 		float tz = CAMERA_HEIGHT_FROM_GROUND;
 
 		// Initialisation de la matrice de paramètres extrinsèques et ajout des composants de rotation et de translation à la matrice
 		double[][] tempMatrix = { { Math.cos(azimuth) * Math.cos(roll), Math.cos(azimuth) * Math.sin(roll) * Math.sin(pitch) - Math.sin(azimuth) * Math.cos(pitch), Math.cos(azimuth) * Math.sin(roll) * Math.cos(pitch) + Math.sin(azimuth) * Math.sin(pitch), tx }, { Math.sin(azimuth) * Math.cos(roll), Math.sin(azimuth) * Math.sin(roll) * Math.sin(pitch) + Math.cos(azimuth) * Math.cos(pitch), Math.sin(azimuth) * Math.sin(roll) * Math.cos(pitch) - Math.cos(azimuth) * Math.sin(pitch), ty }, { -Math.sin(roll), Math.cos(roll) * Math.sin(pitch), Math.cos(roll) * Math.cos(pitch), tz } };
-		Float64Matrix extrinsicParametersMatrix = Float64Matrix.valueOf(tempMatrix);
 
-		return extrinsicParametersMatrix;
+		return Float64Matrix.valueOf(tempMatrix);
+	}
+
+	private Float64Matrix buildProjectionPointCoordinates() {
+		double[][] tempMatrix = { { touchScreenPositionX, touchScreenPositionY } };
+
+		return Float64Matrix.valueOf(tempMatrix);
 	}
 
 	public static void init(SensorManager mSensorManager) {
