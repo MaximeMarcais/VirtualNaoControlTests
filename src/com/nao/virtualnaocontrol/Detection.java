@@ -13,6 +13,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfDouble;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.MatOfPoint3f;
+import org.opencv.core.Point3;
 
 import android.app.Activity;
 import android.hardware.Sensor;
@@ -171,45 +172,55 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 
 	public void detection(DisplayMetrics displayMetrics) {
 
-		Float64Matrix intrinsicParametersMatrix = buildIntrinsicParametersMatrix(displayMetrics);
-		Float64Matrix extrinsicParametersMatrix = buildExtrinsicParametersMatrix((SensorManager) getSystemService(SENSOR_SERVICE));
-		Float64Matrix projectionPointCoordinates = buildProjectionPointCoordinates();
+		Mat intrinsicParametersMatrix = buildIntrinsicParametersMatrix(displayMetrics);
+		// Mat extrinsicParametersMatrix = buildExtrinsicRotationParametersMatrix((SensorManager) getSystemService(SENSOR_SERVICE));
+		// Float64Matrix projectionPointCoordinates = buildProjectionPointCoordinates();
 
 		// Float64Matrix m = lu().solve(B)
 
 		// INPUT
-		// Point3 p1 = new Point3(x, y, z);
+		Point3 p1 = new Point3(x, y, z);
 		MatOfPoint3f objectPoints = new MatOfPoint3f(); // pts robot dans robot
 		MatOfPoint2f imagePoints = new MatOfPoint2f(); // pts robot dans camera
 		Mat cameraMatrix = new Mat(); // intrinsic
-		MatOfDouble distCoeffs = new MatOfDouble(MatOfDouble.zeros(4, 4, CvType.CV_32F)); // zeros
+		MatOfDouble distCoeffs = new MatOfDouble(0.0, 0.0, 0.0, 0.0); // zeros
 
 		// OUTPUT
 		Mat rvec = new Mat();
 		Mat tvec = new Mat();
 
-		Calib3d.solvePnP(objectPoints, imagePoints, cameraMatrix, distCoeffs, rvec, tvec);
+//		Calib3d.solvePnP(objectPoints, imagePoints, cameraMatrix, distCoeffs, rvec, tvec);
 	}
 
-	protected static Float64Matrix buildIntrinsicParametersMatrix(DisplayMetrics displayMetrics) {
+	protected static Mat buildIntrinsicParametersMatrix(DisplayMetrics displayMetrics) {
 
 		// System.out.println("VNCTests : buildIntrinsicParametersMatrix");
 
-		// // Récupération de la focale en pixels
+		// Récupération de la focale en pixels
 		// float focalLength = cameraParameters.getFocalLength();
 		float focalLengthInPixel = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_MM, CAMERA_FOCAL_LENGTH, displayMetrics);
+
 		// Coordonnées du centre de l'écran dans notre repère
 		float centreX = (float) (displayMetrics.widthPixels / 2);
 		float centreY = (float) (displayMetrics.heightPixels / 2);
 
 		// Initialisation de la matrice des paramètres intrinsèques à la caméra et ajout des composants à la matrice
-		double[][] tempMatrix = { { focalLengthInPixel, 0.0f, centreX }, { 0.0f, focalLengthInPixel, centreY }, { 0.0f, 0.0f, 1.0f } };
+		Mat intrinsicParametersMatrix = new Mat(3, 3, CvType.CV_32F);
+		intrinsicParametersMatrix.put(0, 0, focalLengthInPixel);
+		intrinsicParametersMatrix.put(0, 1, 0.0f);
+		intrinsicParametersMatrix.put(0, 2, centreX);
+		intrinsicParametersMatrix.put(1, 0, 0.0f);
+		intrinsicParametersMatrix.put(1, 1, focalLengthInPixel);
+		intrinsicParametersMatrix.put(1, 2, centreY);
+		intrinsicParametersMatrix.put(2, 0, 0.0f);
+		intrinsicParametersMatrix.put(2, 1, 0.0f);
+		intrinsicParametersMatrix.put(2, 2, 1.0f);
 
-		return Float64Matrix.valueOf(tempMatrix);
+		return intrinsicParametersMatrix;
 
 	}
 
-	protected static Float64Matrix buildExtrinsicParametersMatrix(SensorManager mSensorManager) {
+	protected static Mat buildExtrinsicRotationParametersMatrix(SensorManager mSensorManager) {
 
 		// System.out.println("VNCTests : buildExtrinsicParametersMatrix");
 
@@ -242,16 +253,25 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 		}
 
 		// Initialisation des valeurs de position de l'appareil
-		float distanceRobotImageFromFocal = (float) Math.sqrt(CAMERA_FOCAL_LENGTH * CAMERA_FOCAL_LENGTH + DISTANCE_ROBOT_IMAGE_FROM_CENTER * DISTANCE_ROBOT_IMAGE_FROM_CENTER);
-		float distanceRobotFromFocal = distanceRobotImageFromFocal * ROBOT_HEIGHT / ROBOT_HEIGHT_ON_SCREEN;
-		float tx = (float) -Math.sqrt(distanceRobotFromFocal * distanceRobotFromFocal - CAMERA_HEIGHT_FROM_GROUND * CAMERA_HEIGHT_FROM_GROUND);
-		float ty = DISTANCE_ROBOT_IMAGE_FROM_CENTER * ROBOT_HEIGHT / ROBOT_HEIGHT_ON_SCREEN;
-		float tz = CAMERA_HEIGHT_FROM_GROUND;
+		// float distanceRobotImageFromFocal = (float) Math.sqrt(CAMERA_FOCAL_LENGTH * CAMERA_FOCAL_LENGTH + DISTANCE_ROBOT_IMAGE_FROM_CENTER * DISTANCE_ROBOT_IMAGE_FROM_CENTER);
+		// float distanceRobotFromFocal = distanceRobotImageFromFocal * ROBOT_HEIGHT / ROBOT_HEIGHT_ON_SCREEN;
+		// float tx = (float) -Math.sqrt(distanceRobotFromFocal * distanceRobotFromFocal - CAMERA_HEIGHT_FROM_GROUND * CAMERA_HEIGHT_FROM_GROUND);
+		// float ty = DISTANCE_ROBOT_IMAGE_FROM_CENTER * ROBOT_HEIGHT / ROBOT_HEIGHT_ON_SCREEN;
+		// float tz = CAMERA_HEIGHT_FROM_GROUND;
 
-		// Initialisation de la matrice de paramètres extrinsèques et ajout des composants de rotation et de translation à la matrice
-		double[][] tempMatrix = { { Math.cos(azimuth) * Math.cos(roll), Math.cos(azimuth) * Math.sin(roll) * Math.sin(pitch) - Math.sin(azimuth) * Math.cos(pitch), Math.cos(azimuth) * Math.sin(roll) * Math.cos(pitch) + Math.sin(azimuth) * Math.sin(pitch), tx }, { Math.sin(azimuth) * Math.cos(roll), Math.sin(azimuth) * Math.sin(roll) * Math.sin(pitch) + Math.cos(azimuth) * Math.cos(pitch), Math.sin(azimuth) * Math.sin(roll) * Math.cos(pitch) - Math.cos(azimuth) * Math.sin(pitch), ty }, { -Math.sin(roll), Math.cos(roll) * Math.sin(pitch), Math.cos(roll) * Math.cos(pitch), tz } };
+		// Initialisation de la matrice des paramètres intrinsèques à la caméra et ajout des composants à la matrice
+		Mat extrinsicRotationParametersMatrix = new Mat(3, 3, CvType.CV_32F);
+		extrinsicRotationParametersMatrix.put(0, 0, Math.cos(azimuth) * Math.cos(roll));
+		extrinsicRotationParametersMatrix.put(0, 1, Math.cos(azimuth) * Math.sin(roll) * Math.sin(pitch) - Math.sin(azimuth) * Math.cos(pitch));
+		extrinsicRotationParametersMatrix.put(0, 2, Math.cos(azimuth) * Math.sin(roll) * Math.cos(pitch) + Math.sin(azimuth) * Math.sin(pitch));
+		extrinsicRotationParametersMatrix.put(1, 0, Math.sin(azimuth) * Math.cos(roll));
+		extrinsicRotationParametersMatrix.put(1, 1, Math.sin(azimuth) * Math.sin(roll) * Math.sin(pitch) + Math.cos(azimuth) * Math.cos(pitch));
+		extrinsicRotationParametersMatrix.put(1, 2, Math.sin(azimuth) * Math.sin(roll) * Math.cos(pitch) - Math.cos(azimuth) * Math.sin(pitch));
+		extrinsicRotationParametersMatrix.put(2, 0, -Math.sin(roll));
+		extrinsicRotationParametersMatrix.put(2, 1, Math.cos(roll) * Math.sin(pitch));
+		extrinsicRotationParametersMatrix.put(2, 2, Math.cos(roll) * Math.cos(pitch));
 
-		return Float64Matrix.valueOf(tempMatrix);
+		return extrinsicRotationParametersMatrix;
 	}
 
 	private Float64Matrix buildProjectionPointCoordinates() {
