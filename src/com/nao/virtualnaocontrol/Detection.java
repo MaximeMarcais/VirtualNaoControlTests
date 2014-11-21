@@ -13,6 +13,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfDouble;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.MatOfPoint3f;
+import org.opencv.core.Point;
 import org.opencv.core.Point3;
 
 import android.app.Activity;
@@ -172,27 +173,87 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 
 	public void detection(DisplayMetrics displayMetrics) {
 
-		Mat intrinsicParametersMatrix = buildIntrinsicParametersMatrix(displayMetrics);
+		// Mat intrinsicParametersMatrix = buildIntrinsicParametersMatrix(displayMetrics);
 		// Mat extrinsicParametersMatrix = buildExtrinsicRotationParametersMatrix((SensorManager) getSystemService(SENSOR_SERVICE));
 		// Float64Matrix projectionPointCoordinates = buildProjectionPointCoordinates();
 
 		// Float64Matrix m = lu().solve(B)
 
 		// INPUT
-		Point3 p1 = new Point3(x, y, z);
-		MatOfPoint3f objectPoints = new MatOfPoint3f(); // pts robot dans robot
-		MatOfPoint2f imagePoints = new MatOfPoint2f(); // pts robot dans camera
-		Mat cameraMatrix = new Mat(); // intrinsic
+		Point3 point3D1 = new Point3(0.0, 0.0, 0.0);
+		Point3 point3D2 = new Point3(0.0, 0.0, 0.0);
+		Point3 point3D3 = new Point3(0.0, 0.0, 0.0);
+		Point3 point3D4 = new Point3(0.0, 0.0, 0.0);
+		MatOfPoint3f objectPoints = new MatOfPoint3f(point3D1, point3D2, point3D3, point3D4); // pts robot dans robot
+
+		Point point2D1 = new Point(0, 0);
+		Point point2D2 = new Point(1, 1);
+		Point point2D3 = new Point(2, 2);
+		Point point2D4 = new Point(3, 3);
+		MatOfPoint2f imagePoints = new MatOfPoint2f(point2D1, point2D2, point2D3, point2D4); // pts robot dans camera
+		System.out.println("VNCTests : imagePoints" + imagePoints.size().toString());
+
+		Mat cameraMatrix = buildIntrinsicParametersMatrix(displayMetrics); // intrinsic
+		System.out.println("VNCTests : cameraMatrix" + cameraMatrix.size().toString());
 		MatOfDouble distCoeffs = new MatOfDouble(0.0, 0.0, 0.0, 0.0); // zeros
+		System.out.println("VNCTests : distCoeffs" + distCoeffs.size().toString());
 
 		// OUTPUT
 		Mat rvec = new Mat();
 		Mat tvec = new Mat();
 
-//		Calib3d.solvePnP(objectPoints, imagePoints, cameraMatrix, distCoeffs, rvec, tvec);
+		Calib3d.solvePnP(objectPoints, imagePoints, cameraMatrix, distCoeffs, rvec, tvec);
+		System.out.println("VNCTests : rvec" + rvec.size().toString());
+		System.out.println("VNCTests : tvec" + tvec.size().toString());
+
+		Mat rotationMatrix = new Mat();
+		Calib3d.Rodrigues(rvec, rotationMatrix);
+		System.out.println("VNCTests : rotationMatrix" + rotationMatrix.size().toString());
+
+		Mat rotationMatrixInv = rotationMatrix.inv();
+		System.out.println("VNCTests : rotationMatrixInv" + rotationMatrixInv.size().toString());
+
+		Mat rtvec = new Mat();
+		rtvec.put(0, 0, rotationMatrix.get(0, 0)[0]);
+		rtvec.put(0, 1, rotationMatrix.get(0, 1)[0]);
+		rtvec.put(0, 2, rotationMatrix.get(0, 2)[0]);
+		rtvec.put(0, 3, tvec.get(0, 0)[0]);
+		rtvec.put(1, 0, rotationMatrix.get(1, 0)[0]);
+		rtvec.put(1, 1, rotationMatrix.get(1, 1)[0]);
+		rtvec.put(1, 2, rotationMatrix.get(1, 2)[0]);
+		rtvec.put(1, 3, tvec.get(1, 0)[0]);
+		rtvec.put(2, 0, rotationMatrix.get(2, 0)[0]);
+		rtvec.put(2, 1, rotationMatrix.get(2, 1)[0]);
+		rtvec.put(2, 2, rotationMatrix.get(2, 2)[0]);
+		rtvec.put(2, 3, tvec.get(2, 0)[0]);
+		System.out.println("VNCTests : rtvec" + rtvec.size().toString());
+
+		// Mat a = cameraMatrix.mul(rtvec);
+		// // Mat vect = new Mat();
+		// // vect.put(0, 0, 0);
+		// // vect.put(0, 1, 0);
+		// // vect.put(0, 2, 0);
+		// // vect.put(0, 3, 1);
+		// // Mat tmp = a.mul(vect);
+		//
+		// Mat c = new Mat();
+		// c.put(0, 0, a.get(0, 0)[0]);
+		// c.put(0, 1, a.get(0, 1)[0]);
+		// c.put(0, 2, a.get(0, 3)[0]);
+		// c.put(1, 0, a.get(1, 0)[0]);
+		// c.put(1, 1, a.get(1, 1)[0]);
+		// c.put(1, 2, a.get(1, 3)[0]);
+		// c.put(2, 0, a.get(2, 0)[0]);
+		// c.put(2, 1, a.get(2, 1)[0]);
+		// c.put(2, 2, a.get(2, 3)[0]);
+		//
+		// Point touchPoint2D = new Point(2, 2);
+		// MatOfPoint2f touchPointMatrix = new MatOfPoint2f(touchPoint2D);
+		// Mat touchPointInRobotReference = c.inv().mul(touchPointMatrix);
+
 	}
 
-	protected static Mat buildIntrinsicParametersMatrix(DisplayMetrics displayMetrics) {
+	protected Mat buildIntrinsicParametersMatrix(DisplayMetrics displayMetrics) {
 
 		// System.out.println("VNCTests : buildIntrinsicParametersMatrix");
 
@@ -220,7 +281,7 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 
 	}
 
-	protected static Mat buildExtrinsicRotationParametersMatrix(SensorManager mSensorManager) {
+	protected Mat buildExtrinsicRotationParametersMatrix(SensorManager mSensorManager) {
 
 		// System.out.println("VNCTests : buildExtrinsicParametersMatrix");
 
@@ -280,7 +341,7 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 		return Float64Matrix.valueOf(tempMatrix);
 	}
 
-	public static void init(SensorManager mSensorManager) {
+	public void init(SensorManager mSensorManager) {
 		setAccelerometer(mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER));
 		setMagnetometer(mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD));
 
