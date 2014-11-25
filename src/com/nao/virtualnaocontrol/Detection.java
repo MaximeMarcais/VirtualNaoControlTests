@@ -221,9 +221,9 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 		c.put(2, 1, a.get(2, 1)[0]);
 		c.put(2, 2, a.get(2, 3)[0]);
 
-		Mat tmpMatrix = c.inv();
+		Mat invC = c.inv();
 		Mat touchPointInRobotReference = new Mat(3, 1, CvType.CV_32F);
-		Core.gemm(tmpMatrix, touchedPointMatrix, 1, new Mat(), 0, touchPointInRobotReference, 0);
+		Core.gemm(invC, touchedPointMatrix, 1, new Mat(), 0, touchPointInRobotReference, 0);
 
 		System.out.println("VNCTests : touchPointInRobotReference" + touchPointInRobotReference.size().toString());
 		System.out.println("VNCTests : touchPointInRobotReference" + touchPointInRobotReference);
