@@ -16,7 +16,7 @@ public class MatrixTransformations {
 	
 	private final static float CAMERA_FOCAL_LENGTH = 3.43f; // Exprimée en mm
 
-	public Mat detection(DisplayMetrics displayMetrics, MatOfPoint3f objectPoints, MatOfPoint2f imagePoints, Mat touchedPointMatrix) {
+	public static Mat detection(DisplayMetrics displayMetrics, MatOfPoint3f objectPoints, MatOfPoint2f imagePoints, Mat touchedPointMatrix) {
 
 		Mat cameraMatrix = buildIntrinsicParametersMatrix(displayMetrics); // paramètres intrinsèques à la caméra
 		MatOfDouble distCoeffs = new MatOfDouble(0.0, 0.0, 0.0, 0.0); // Matrices de zéros
@@ -67,7 +67,7 @@ public class MatrixTransformations {
 
 	}
 
-	protected Mat buildIntrinsicParametersMatrix(DisplayMetrics displayMetrics) {
+	protected static Mat buildIntrinsicParametersMatrix(DisplayMetrics displayMetrics) {
 
 		// Récupération de la focale en pixels
 		float focalLengthInPixel = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_MM, CAMERA_FOCAL_LENGTH, displayMetrics); // TODO : float focalLength = cameraParameters.getFocalLength();
