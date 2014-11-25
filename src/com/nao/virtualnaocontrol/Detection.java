@@ -183,7 +183,7 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 		Mat cameraMatrix = buildIntrinsicParametersMatrix(displayMetrics);
 
 		// Construction d'une matrices représentant les coefficients de distorsion de la caméra (aucune distorsion : matrice de zéros)
-		MatOfDouble distCoeffs = new MatOfDouble(0.0, 0.0, 0.0, 0.0);
+		MatOfDouble distCoeffs = new MatOfDouble(0, 0, 0, 0);
 
 		// Récupération de la matrice de correspondance 2D/3D
 		Mat rvec = new Mat(); // Output
@@ -245,14 +245,14 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 		// Initialisation de la matrice des paramètres intrinsèques à la caméra et ajout des composants à la matrice
 		Mat intrinsicParametersMatrix = new Mat(3, 3, CvType.CV_32F);
 		intrinsicParametersMatrix.put(0, 0, focalLengthInPixel);
-		intrinsicParametersMatrix.put(0, 1, 0.0f);
+		intrinsicParametersMatrix.put(0, 1, 0);
 		intrinsicParametersMatrix.put(0, 2, centreX);
-		intrinsicParametersMatrix.put(1, 0, 0.0f);
+		intrinsicParametersMatrix.put(1, 0, 0);
 		intrinsicParametersMatrix.put(1, 1, focalLengthInPixel);
 		intrinsicParametersMatrix.put(1, 2, centreY);
-		intrinsicParametersMatrix.put(2, 0, 0.0f);
-		intrinsicParametersMatrix.put(2, 1, 0.0f);
-		intrinsicParametersMatrix.put(2, 2, 1.0f);
+		intrinsicParametersMatrix.put(2, 0, 0);
+		intrinsicParametersMatrix.put(2, 1, 0);
+		intrinsicParametersMatrix.put(2, 2, 1);
 
 		return intrinsicParametersMatrix;
 
