@@ -13,7 +13,7 @@ import android.util.TypedValue;
 
 public class MatrixTransformations {
 
-	private final static float CAMERA_FOCAL_LENGTH = 3.43f; // Exprimée en mm
+	private final static float CAMERA_FOCAL_LENGTH = 0.00343f; // Exprimée en m
 
 	public static Mat detection(DisplayMetrics displayMetrics, MatOfPoint3f objectPoints, MatOfPoint2f imagePoints, Mat touchedPointMatrix) throws Exception {
 
@@ -83,7 +83,8 @@ public class MatrixTransformations {
 	protected static Mat buildIntrinsicParametersMatrix(DisplayMetrics displayMetrics) {
 
 		// Récupération de la focale en pixels
-		float focalLengthInPixel = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_MM, CAMERA_FOCAL_LENGTH, displayMetrics); // TODO : float focalLength = cameraParameters.getFocalLength();
+		// TODO : float focalLength = cameraParameters.getFocalLength();
+		float focalLengthInPixel = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_MM, CAMERA_FOCAL_LENGTH, displayMetrics);
 
 		// Coordonnées du centre de l'écran dans notre repère
 		float centreX = (float) (displayMetrics.widthPixels / 2);
