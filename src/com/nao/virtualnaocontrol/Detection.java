@@ -186,12 +186,12 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 		MatOfDouble distCoeffs = new MatOfDouble(0, 0, 0, 0);
 
 		// Récupération de la matrice de correspondance 2D/3D
-		Mat rvec = new Mat(); // Output
-		Mat tvec = new Mat(); // Output
+		Mat rvec = new Mat(); // Output de solvePnP
+		Mat tvec = new Mat(); // Output de solvePnP
 		Calib3d.solvePnP(objectPoints, imagePoints, cameraMatrix, distCoeffs, rvec, tvec);
 
 		// Conversion vecteur de rotation vers matrice de rotation
-		Mat rotationMatrix = new Mat(); // Output
+		Mat rotationMatrix = new Mat(); // Output de Rodrigues
 		Calib3d.Rodrigues(rvec, rotationMatrix);
 
 		// Construction de la matrice de passage
@@ -209,7 +209,7 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 		rtvec.put(2, 2, rotationMatrix.get(2, 2)[0]);
 		rtvec.put(2, 3, tvec.get(2, 0)[0]);
 
-		Mat a = new Mat(3, 4, CvType.CV_32F); // Output
+		Mat a = new Mat(3, 4, CvType.CV_32F); // Output de gemm
 		Core.gemm(cameraMatrix, rtvec, 1, new Mat(), 0, a, 0); // Equivalent à : cameraMatrix * rtvec;
 
 		Mat c = new Mat(3, 3, CvType.CV_32F);
@@ -223,10 +223,10 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 		c.put(2, 1, a.get(2, 1)[0]);
 		c.put(2, 2, a.get(2, 3)[0]);
 
-		// Résolution du système matriciel, on récupère les coordonnées du point touché (à l'écran) dans le repère du robot
-		Mat invC = c.inv(); // Output
-		Mat touchPointInRobotReference = new Mat(3, 1, CvType.CV_32F);
-		touchedPointMatrix.put(2, 0, 1);
+		// Résolution du système matriciel : on récupère les coordonnées du point touché (à l'écran) dans le repère du robot
+		Mat invC = c.inv();
+		touchedPointMatrix.put(2, 0, 1); // Ajout d'une coordonnée en Z pour le point touché (à l'écran), utile seulement pour le calcul
+		Mat touchPointInRobotReference = new Mat(3, 1, CvType.CV_32F); // Output de gemm
 		Core.gemm(invC, touchedPointMatrix, 1, new Mat(), 0, touchPointInRobotReference, 0);
 
 		return touchPointInRobotReference;

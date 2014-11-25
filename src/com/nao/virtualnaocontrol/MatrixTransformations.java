@@ -15,59 +15,68 @@ public class MatrixTransformations {
 
 	private final static float CAMERA_FOCAL_LENGTH = 3.43f; // Exprimée en mm
 
-	public static Mat detection(DisplayMetrics displayMetrics, MatOfPoint3f objectPoints, MatOfPoint2f imagePoints, Mat touchedPointMatrix) {
+	public static Mat detection(DisplayMetrics displayMetrics, MatOfPoint3f objectPoints, MatOfPoint2f imagePoints, Mat touchedPointMatrix) throws Exception {
 
-		// Récupération des paramètres intrinsèques à la caméra
-		Mat cameraMatrix = buildIntrinsicParametersMatrix(displayMetrics);
+		if (displayMetrics != null && objectPoints != null && imagePoints != null && touchedPointMatrix != null) {
+			if (objectPoints.size() == imagePoints.size()){
+				
+			// Récupération des paramètres intrinsèques à la caméra
+			Mat cameraMatrix = buildIntrinsicParametersMatrix(displayMetrics);
 
-		// Construction d'une matrices représentant les coefficients de distorsion de la caméra (aucune distorsion : matrice de zéros)
-		MatOfDouble distCoeffs = new MatOfDouble(0, 0, 0, 0);
+			// Construction d'une matrices représentant les coefficients de distorsion de la caméra (aucune distorsion : matrice de zéros)
+			MatOfDouble distCoeffs = new MatOfDouble(0, 0, 0, 0);
 
-		// Récupération de la matrice de correspondance 2D/3D
-		Mat rvec = new Mat(); // Output
-		Mat tvec = new Mat(); // Output
-		Calib3d.solvePnP(objectPoints, imagePoints, cameraMatrix, distCoeffs, rvec, tvec);
+			// Récupération de la matrice de correspondance 2D/3D
+			Mat rvec = new Mat(); // Output de solvePnP
+			Mat tvec = new Mat(); // Output de solvePnP
+			Calib3d.solvePnP(objectPoints, imagePoints, cameraMatrix, distCoeffs, rvec, tvec);
 
-		// Conversion vecteur de rotation vers matrice de rotation
-		Mat rotationMatrix = new Mat(); // Output
-		Calib3d.Rodrigues(rvec, rotationMatrix);
+			// Conversion vecteur de rotation vers matrice de rotation
+			Mat rotationMatrix = new Mat(); // Output de Rodrigues
+			Calib3d.Rodrigues(rvec, rotationMatrix);
 
-		// Construction de la matrice de passage
-		Mat rtvec = new Mat(3, 4, CvType.CV_32F);
-		rtvec.put(0, 0, rotationMatrix.get(0, 0)[0]);
-		rtvec.put(0, 1, rotationMatrix.get(0, 1)[0]);
-		rtvec.put(0, 2, rotationMatrix.get(0, 2)[0]);
-		rtvec.put(0, 3, tvec.get(0, 0)[0]);
-		rtvec.put(1, 0, rotationMatrix.get(1, 0)[0]);
-		rtvec.put(1, 1, rotationMatrix.get(1, 1)[0]);
-		rtvec.put(1, 2, rotationMatrix.get(1, 2)[0]);
-		rtvec.put(1, 3, tvec.get(1, 0)[0]);
-		rtvec.put(2, 0, rotationMatrix.get(2, 0)[0]);
-		rtvec.put(2, 1, rotationMatrix.get(2, 1)[0]);
-		rtvec.put(2, 2, rotationMatrix.get(2, 2)[0]);
-		rtvec.put(2, 3, tvec.get(2, 0)[0]);
+			// Construction de la matrice de passage
+			Mat rtvec = new Mat(3, 4, CvType.CV_32F);
+			rtvec.put(0, 0, rotationMatrix.get(0, 0)[0]);
+			rtvec.put(0, 1, rotationMatrix.get(0, 1)[0]);
+			rtvec.put(0, 2, rotationMatrix.get(0, 2)[0]);
+			rtvec.put(0, 3, tvec.get(0, 0)[0]);
+			rtvec.put(1, 0, rotationMatrix.get(1, 0)[0]);
+			rtvec.put(1, 1, rotationMatrix.get(1, 1)[0]);
+			rtvec.put(1, 2, rotationMatrix.get(1, 2)[0]);
+			rtvec.put(1, 3, tvec.get(1, 0)[0]);
+			rtvec.put(2, 0, rotationMatrix.get(2, 0)[0]);
+			rtvec.put(2, 1, rotationMatrix.get(2, 1)[0]);
+			rtvec.put(2, 2, rotationMatrix.get(2, 2)[0]);
+			rtvec.put(2, 3, tvec.get(2, 0)[0]);
 
-		Mat a = new Mat(3, 4, CvType.CV_32F); // Output
-		Core.gemm(cameraMatrix, rtvec, 1, new Mat(), 0, a, 0); // Equivalent à : cameraMatrix * rtvec;
+			Mat a = new Mat(3, 4, CvType.CV_32F); // Output de gemm
+			Core.gemm(cameraMatrix, rtvec, 1, new Mat(), 0, a, 0); // Equivalent à : cameraMatrix * rtvec;
 
-		Mat c = new Mat(3, 3, CvType.CV_32F);
-		c.put(0, 0, a.get(0, 0)[0]);
-		c.put(0, 1, a.get(0, 1)[0]);
-		c.put(0, 2, a.get(0, 3)[0]);
-		c.put(1, 0, a.get(1, 0)[0]);
-		c.put(1, 1, a.get(1, 1)[0]);
-		c.put(1, 2, a.get(1, 3)[0]);
-		c.put(2, 0, a.get(2, 0)[0]);
-		c.put(2, 1, a.get(2, 1)[0]);
-		c.put(2, 2, a.get(2, 3)[0]);
+			Mat c = new Mat(3, 3, CvType.CV_32F);
+			c.put(0, 0, a.get(0, 0)[0]);
+			c.put(0, 1, a.get(0, 1)[0]);
+			c.put(0, 2, a.get(0, 3)[0]);
+			c.put(1, 0, a.get(1, 0)[0]);
+			c.put(1, 1, a.get(1, 1)[0]);
+			c.put(1, 2, a.get(1, 3)[0]);
+			c.put(2, 0, a.get(2, 0)[0]);
+			c.put(2, 1, a.get(2, 1)[0]);
+			c.put(2, 2, a.get(2, 3)[0]);
 
-		// Résolution du système matriciel, on récupère les coordonnées du point touché (à l'écran) dans le repère du robot
-		Mat invC = c.inv(); // Output
-		Mat touchPointInRobotReference = new Mat(3, 1, CvType.CV_32F);
-		touchedPointMatrix.put(2, 0, 1);
-		Core.gemm(invC, touchedPointMatrix, 1, new Mat(), 0, touchPointInRobotReference, 0);
+			// Résolution du système matriciel : on récupère les coordonnées du point touché (à l'écran) dans le repère du robot
+			Mat invC = c.inv();
+			touchedPointMatrix.put(2, 0, 1); // Ajout d'une coordonnée en Z pour le point touché (à l'écran), utile seulement pour le calcul
+			Mat touchPointInRobotReference = new Mat(3, 1, CvType.CV_32F); // Output de gemm
+			Core.gemm(invC, touchedPointMatrix, 1, new Mat(), 0, touchPointInRobotReference, 0);
 
-		return touchPointInRobotReference;
+			return touchPointInRobotReference;
+			} else{
+				throw new Exception("VNC ERROR : number of object points and image points are different.");
+			}
+		} else {
+			throw new Exception("VNC ERROR : Null parameter in detection.");
+		}
 
 	}
 
