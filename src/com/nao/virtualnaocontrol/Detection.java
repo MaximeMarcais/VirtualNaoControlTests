@@ -179,20 +179,22 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 		// Point point2D4 = new Point(imagePointsMatrix.get(3, 0)[0], imagePointsMatrix.get(3, 1)[0]);
 		// MatOfPoint2f imagePoints = new MatOfPoint2f(point2D1, point2D2, point2D3, point2D4); // Points du robot dans le repère de la caméra
 
-		Mat cameraMatrix = buildIntrinsicParametersMatrix(displayMetrics); // paramètres intrinsèques à la caméra
-		MatOfDouble distCoeffs = new MatOfDouble(0.0, 0.0, 0.0, 0.0); // Matrices de zéros
+		// Récupération des paramètres intrinsèques à la caméra
+		Mat cameraMatrix = buildIntrinsicParametersMatrix(displayMetrics);
 
-		// Output
-		Mat rvec = new Mat();
-		Mat tvec = new Mat();
+		// Construction d'une matrices représentant les coefficients de distorsion de la caméra (aucune distorsion : matrice de zéros)
+		MatOfDouble distCoeffs = new MatOfDouble(0.0, 0.0, 0.0, 0.0);
 
+		// Récupération de la matrice de correspondance 2D/3D
+		Mat rvec = new Mat(); // Output
+		Mat tvec = new Mat(); // Output
 		Calib3d.solvePnP(objectPoints, imagePoints, cameraMatrix, distCoeffs, rvec, tvec);
 
-		Mat rotationMatrix = new Mat();
+		// Conversion vecteur de rotation vers matrice de rotation
+		Mat rotationMatrix = new Mat(); // Output
 		Calib3d.Rodrigues(rvec, rotationMatrix);
 
-		// Mat rotationMatrixInv = rotationMatrix.inv();
-
+		// Construction de la matrice de passage
 		Mat rtvec = new Mat(3, 4, CvType.CV_32F);
 		rtvec.put(0, 0, rotationMatrix.get(0, 0)[0]);
 		rtvec.put(0, 1, rotationMatrix.get(0, 1)[0]);
@@ -207,8 +209,8 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 		rtvec.put(2, 2, rotationMatrix.get(2, 2)[0]);
 		rtvec.put(2, 3, tvec.get(2, 0)[0]);
 
-		Mat a = new Mat(3, 4, CvType.CV_32F);
-		Core.gemm(cameraMatrix, rtvec, 1, new Mat(), 0, a, 0);// Equivalent à : cameraMatrix * rtvec;
+		Mat a = new Mat(3, 4, CvType.CV_32F); // Output
+		Core.gemm(cameraMatrix, rtvec, 1, new Mat(), 0, a, 0); // Equivalent à : cameraMatrix * rtvec;
 
 		Mat c = new Mat(3, 3, CvType.CV_32F);
 		c.put(0, 0, a.get(0, 0)[0]);
@@ -221,22 +223,20 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 		c.put(2, 1, a.get(2, 1)[0]);
 		c.put(2, 2, a.get(2, 3)[0]);
 
-		Mat invC = c.inv();
+		// Résolution du système matriciel, on récupère les coordonnées du point touché (à l'écran) dans le repère du robot
+		Mat invC = c.inv(); // Output
 		Mat touchPointInRobotReference = new Mat(3, 1, CvType.CV_32F);
+		touchedPointMatrix.put(2, 0, 1);
 		Core.gemm(invC, touchedPointMatrix, 1, new Mat(), 0, touchPointInRobotReference, 0);
-
-		System.out.println("VNCTests : touchPointInRobotReference" + touchPointInRobotReference.size().toString());
-		System.out.println("VNCTests : touchPointInRobotReference" + touchPointInRobotReference);
 
 		return touchPointInRobotReference;
 
 	}
 
-	protected Mat buildIntrinsicParametersMatrix(DisplayMetrics displayMetrics) {
+	protected static Mat buildIntrinsicParametersMatrix(DisplayMetrics displayMetrics) {
 
 		// Récupération de la focale en pixels
-		// float focalLength = cameraParameters.getFocalLength();
-		float focalLengthInPixel = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_MM, CAMERA_FOCAL_LENGTH, displayMetrics);
+		float focalLengthInPixel = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_MM, CAMERA_FOCAL_LENGTH, displayMetrics); // TODO : float focalLength = cameraParameters.getFocalLength();
 
 		// Coordonnées du centre de l'écran dans notre repère
 		float centreX = (float) (displayMetrics.widthPixels / 2);
