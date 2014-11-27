@@ -7,6 +7,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfDouble;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.MatOfPoint3f;
+import org.opencv.core.Point;
 
 import android.util.DisplayMetrics;
 
@@ -71,19 +72,6 @@ public class MatrixTransformations {
 		Mat touchPointInRobotReference = new Mat(3, 1, CvType.CV_32F); // Output de gemm
 		Core.gemm(invC, touchedPointMatrix, 1, new Mat(), 0, touchPointInRobotReference, 0);
 
-		
-		
-//		Mat tmp = new Mat(1, 4, CvType.CV_32F);
-//		Mat tmp2 = new Mat(1, 4, CvType.CV_32F);
-//		Mat tmp3 = new Mat(1, 4, CvType.CV_32F);
-//		tmp2.put(0, 0, 0);
-//		tmp2.put(0, 1, 0);
-//		tmp2.put(0, 2, 0);
-//		tmp2.put(0, 3, 1);
-//		Core.gemm(a, tmp2, 1, new Mat(), 0, tmp3, 0);
-		
-		
-		
 		return touchPointInRobotReference;
 
 	}
