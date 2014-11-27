@@ -18,12 +18,8 @@ public class MatrixTransformations {
 
 		if (displayMetrics == null || objectPoints == null || imagePoints == null || touchedPointMatrix == null)
 			throw new Exception("VNC ERROR : Null parameter in detection.");
-		if (objectPoints.height() != imagePoints.height())
+		if (objectPoints.rows() != imagePoints.rows())
 			throw new Exception("VNC ERROR : number of object points and image points are different.");
-
-		// Transformation des données en pixel vers des mètres
-		imagePoints = (MatOfPoint2f) pixelToMeter(displayMetrics, imagePoints);
-		touchedPointMatrix = pixelToMeter(displayMetrics, touchedPointMatrix);
 
 		// Récupération des paramètres intrinsèques à la caméra
 		Mat cameraMatrix = buildIntrinsicParametersMatrix(displayMetrics);
@@ -75,23 +71,26 @@ public class MatrixTransformations {
 		Mat touchPointInRobotReference = new Mat(3, 1, CvType.CV_32F); // Output de gemm
 		Core.gemm(invC, touchedPointMatrix, 1, new Mat(), 0, touchPointInRobotReference, 0);
 
+		
+		
+//		Mat tmp = new Mat(1, 4, CvType.CV_32F);
+//		Mat tmp2 = new Mat(1, 4, CvType.CV_32F);
+//		Mat tmp3 = new Mat(1, 4, CvType.CV_32F);
+//		tmp2.put(0, 0, 0);
+//		tmp2.put(0, 1, 0);
+//		tmp2.put(0, 2, 0);
+//		tmp2.put(0, 3, 1);
+//		Core.gemm(a, tmp2, 1, new Mat(), 0, tmp3, 0);
+		
+		
+		
 		return touchPointInRobotReference;
 
 	}
 
-	protected static Mat pixelToMeter(DisplayMetrics displayMetrics, Mat imagePoints) {
+	public static double pixelToMeter(DisplayMetrics displayMetrics, double pixelValue) {
 
-		double value = 0;
-
-		for (int i = 0; i < imagePoints.rows(); i++) {
-			for (int j = 0; j < imagePoints.cols(); j++) {
-				value = (imagePoints.get(i, j)[0] / displayMetrics.xdpi * 25.4) / 1000;
-				imagePoints.put(i, j, value);
-			}
-
-		}
-
-		return imagePoints;
+		return (pixelValue / displayMetrics.xdpi * 25.4) / 1000;
 	}
 
 	protected static Mat buildIntrinsicParametersMatrix(DisplayMetrics displayMetrics) {
