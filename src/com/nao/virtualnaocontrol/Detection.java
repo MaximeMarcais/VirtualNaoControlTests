@@ -192,7 +192,7 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 
 		System.out.println("VNCTests TOUCH : X=" + touchPointInRobotReference.get(0, 0)[0]); // -0.9 m
 		System.out.println("VNCTests TOUCH : Y=" + touchPointInRobotReference.get(1, 0)[0]); // -0.6 m
-		System.out.println("VNCTests TOUCH : quelquechose=" + touchPointInRobotReference.get(2, 0)[0]); // 0 m
+		System.out.println("VNCTests TOUCH : quelquechose=" + touchPointInRobotReference.get(2, 0)[0]); // Ceci n'es tpas le Z
 
 		return touchPointInRobotReference;
 

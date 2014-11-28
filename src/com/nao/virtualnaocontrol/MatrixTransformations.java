@@ -53,20 +53,23 @@ public class MatrixTransformations {
 		rtvec.put(2, 2, rotationMatrix.get(2, 2)[0]);
 		rtvec.put(2, 3, tvec.get(2, 0)[0]);
 
+		// TODO : commentaire
 		Mat a = new Mat(3, 4, CvType.CV_32F); // Output de gemm
 		Core.gemm(cameraMatrix, rtvec, 1, new Mat(), 0, a, 0); // Equivalent à : cameraMatrix * rtvec;
 
+		// TODO : commentaire
 		Mat b = new Mat(4, 1, CvType.CV_32F);
 		b.put(0, 0, 0);
 		b.put(1, 0, 0);
 		b.put(2, 0, 0);
 		b.put(3, 0, 1);
 		
-		
-		Mat d = new Mat(3, 1, CvType.CV_32F);
+		// TODO : commentaire
+		Mat d = new Mat(3, 1, CvType.CV_32F); // Output de gemm
 		Core.gemm(a, b, 1, new Mat(), 0, d, 0);
 		double u = d.get(2, 0)[0];
 		
+		// TODO : commentaire
 		Mat c = new Mat(3, 3, CvType.CV_32F);
 		c.put(0, 0, a.get(0, 0)[0]);
 		c.put(0, 1, a.get(0, 1)[0]);
