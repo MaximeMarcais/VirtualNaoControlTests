@@ -173,8 +173,8 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 
 		// Input
 		touchedPointMatrix = new Mat(3, 1, CvType.CV_32F);
-		touchedPointMatrix.put(0, 0, MatrixTransformations.pixelToMeter(displayMetrics, 749)); // X ?
-		touchedPointMatrix.put(1, 0, MatrixTransformations.pixelToMeter(displayMetrics, 921)); // Y ?
+		touchedPointMatrix.put(0, 0, 749); // X ?
+		touchedPointMatrix.put(1, 0, 921); // Y ?
 
 		Point3 point3D1 = new Point3(0.02210916206240654, 0.0, 0.44615206122398376); // Tête
 		Point3 point3D2 = new Point3(0.1174665167927742, 0.11092513799667358, 0.27571398019790649); // Bras gauche
@@ -182,17 +182,17 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 		Point3 point3D4 = new Point3(0.020062578842043877, 0.08999999612569809, 0.42575448751449585); // Epaule gauche
 		objectPoints = new MatOfPoint3f(point3D1, point3D2, point3D3, point3D4); // Points du robot dans son repère
 
-		Point point2D1 = new Point(MatrixTransformations.pixelToMeter(displayMetrics, 1673), MatrixTransformations.pixelToMeter(displayMetrics, 461)); // Tête
-		Point point2D2 = new Point(MatrixTransformations.pixelToMeter(displayMetrics, 1977), MatrixTransformations.pixelToMeter(displayMetrics, 1161)); // Bras gauche
-		Point point2D3 = new Point(MatrixTransformations.pixelToMeter(displayMetrics, 1353), MatrixTransformations.pixelToMeter(displayMetrics, 1161)); // Bras droit
-		Point point2D4 = new Point(MatrixTransformations.pixelToMeter(displayMetrics, 1897), MatrixTransformations.pixelToMeter(displayMetrics, 609)); // Epaule gauche
+		Point point2D1 = new Point(1673, 461); // Tête
+		Point point2D2 = new Point(1977, 1161); // Bras gauche
+		Point point2D3 = new Point(1353, 1161); // Bras droit
+		Point point2D4 = new Point(1897, 609); // Epaule gauche
 		imagePoints = new MatOfPoint2f(point2D1, point2D2, point2D3, point2D4); // Points du robot dans le repère de la caméra
 
 		Mat touchPointInRobotReference = MatrixTransformations.detection(displayMetrics, objectPoints, imagePoints, touchedPointMatrix);
 
 		System.out.println("VNCTests TOUCH : X=" + touchPointInRobotReference.get(0, 0)[0]); // -0.9 m
 		System.out.println("VNCTests TOUCH : Y=" + touchPointInRobotReference.get(1, 0)[0]); // -0.6 m
-		System.out.println("VNCTests TOUCH : Z=" + touchPointInRobotReference.get(2, 0)[0]); // 0 m
+		System.out.println("VNCTests TOUCH : quelquechose=" + touchPointInRobotReference.get(2, 0)[0]); // 0 m
 
 		return touchPointInRobotReference;
 
