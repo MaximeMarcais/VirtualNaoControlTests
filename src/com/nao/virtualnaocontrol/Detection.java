@@ -49,6 +49,12 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 			switch (status) {
 			case LoaderCallbackInterface.SUCCESS: {
 				mOpenCvCameraView.enableView();
+				
+				try {
+					detection(getResources().getDisplayMetrics(), null, null, null);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 				break;
 			default: {
@@ -140,7 +146,7 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 
 	public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
 
-		// System.out.println("VNCTests : onCameraFrame");
+		 System.out.println("VNCTests : onCameraFrame");
 
 		try {
 			detection(getResources().getDisplayMetrics(), null, null, null);
@@ -167,7 +173,7 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 		return super.onTouchEvent(event);
 	}
 
-	public Mat detection(DisplayMetrics displayMetrics, MatOfPoint3f objectPoints, MatOfPoint2f imagePoints, Mat touchedPointMatrix) throws Exception {
+	public Point3 detection(DisplayMetrics displayMetrics, MatOfPoint3f objectPoints, MatOfPoint2f imagePoints, Mat touchedPointMatrix) throws Exception {
 
 		System.out.println("VNCTests : detection");
 
@@ -180,19 +186,23 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 		Point3 point3D2 = new Point3(0.1174665167927742, 0.11092513799667358, 0.27571398019790649); // Bras gauche
 		Point3 point3D3 = new Point3(0.1174665167927742, -0.11092513799667358, 0.27571398019790649); // Bras droit
 		Point3 point3D4 = new Point3(0.020062578842043877, 0.08999999612569809, 0.42575448751449585); // Epaule gauche
-		objectPoints = new MatOfPoint3f(point3D1, point3D2, point3D3, point3D4); // Points du robot dans son repère
+		Point3 point3D5 = new Point3(0, 0, 0); // Entre les deux pieds
+		objectPoints = new MatOfPoint3f(point3D1, point3D2, point3D3, point3D4, point3D5); // Points du robot dans son repère
 
 		Point point2D1 = new Point(1673, 461); // Tête
 		Point point2D2 = new Point(1977, 1161); // Bras gauche
 		Point point2D3 = new Point(1353, 1161); // Bras droit
 		Point point2D4 = new Point(1897, 609); // Epaule gauche
-		imagePoints = new MatOfPoint2f(point2D1, point2D2, point2D3, point2D4); // Points du robot dans le repère de la caméra
+		Point point2D5 = new Point(1641, 1641); // Entre les deux pieds
+		imagePoints = new MatOfPoint2f(point2D1, point2D2, point2D3, point2D4, point2D5); // Points du robot dans le repère de la caméra
 
-		Mat touchPointInRobotReference = MatrixTransformations.detection(displayMetrics, objectPoints, imagePoints, touchedPointMatrix);
+		Point3 touchPointInRobotReference = MatrixTransformations.detection(displayMetrics, objectPoints, imagePoints, touchedPointMatrix);
 
-		System.out.println("VNCTests TOUCH : X=" + touchPointInRobotReference.get(0, 0)[0]); // -0.9 m
-		System.out.println("VNCTests TOUCH : Y=" + touchPointInRobotReference.get(1, 0)[0]); // -0.6 m
-		System.out.println("VNCTests TOUCH : quelquechose=" + touchPointInRobotReference.get(2, 0)[0]); // Ceci n'es tpas le Z
+		System.out.println("VNCTests TOUCH : " + touchPointInRobotReference);
+
+		// System.out.println("VNCTests TOUCH : X=" + touchPointInRobotReference.get(0, 0)[0]); // -0.9 m
+		// System.out.println("VNCTests TOUCH : Y=" + touchPointInRobotReference.get(1, 0)[0]); // -0.6 m
+		// System.out.println("VNCTests TOUCH : quelquechose=" + touchPointInRobotReference.get(2, 0)[0]); // Ceci n'es tpas le Z
 
 		return touchPointInRobotReference;
 
