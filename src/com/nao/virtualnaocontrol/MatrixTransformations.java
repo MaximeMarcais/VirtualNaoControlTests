@@ -8,7 +8,6 @@ import org.opencv.core.MatOfDouble;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.MatOfPoint3f;
 import org.opencv.core.Point3;
-import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 
 import android.hardware.Sensor;
@@ -101,44 +100,44 @@ public class MatrixTransformations {
 
 		// Résolution du système matriciel : on récupère les coordonnées du point touché (à l'écran) dans le repère du robot
 		// Mat invC = c.inv();
-		 touchedPointMatrix.put(2, 0, 1); // Ajout d'une coordonnée en Z pour le point touché (à l'écran), utile seulement pour le calcul
+		touchedPointMatrix.put(2, 0, 1); // Ajout d'une coordonnée en Z pour le point touché (à l'écran), utile seulement pour le calcul
 		// Mat touchPointInRobotReference = new Mat(3, 1, CvType.CV_32F); // Output de gemm
 		// Core.gemm(invC, touchedPointMatrix, 1, new Mat(), 0, touchPointInRobotReference, 0);
 
 		// // Application du coeff u
 		// touchPointInRobotReference.put(0, 0, u * touchPointInRobotReference.get(0, 0)[0]);
 		// touchPointInRobotReference.put(1, 0, u * touchPointInRobotReference.get(1, 0)[0]);
-//		 touchPointInRobotReference.put(2, 0, u * touchPointInRobotReference.get(2, 0)[0]);
+		// touchPointInRobotReference.put(2, 0, u * touchPointInRobotReference.get(2, 0)[0]);
 
 		// ///////////////////////
 		// APPLICATION DU CARSENAT
 		// ///////////////////////
 
-		 // ///////////////////////////////////////////////
-		 
+		// ///////////////////////////////////////////////
+
 		// Initialisation du sensor manager
-			init(mSensorManager);
+		init(mSensorManager);
 
-			// Initialisation des angles d'orientation de l'appareil
-			float pitch = 0.0f;
+		// Initialisation des angles d'orientation de l'appareil
+		float pitch = 0.0f;
 
-			// Récupération des paramètres d'orientation de l'appareil
-			if (mGravity != null && mGeomagnetic != null) {
-				float R[] = new float[9];
-				float I[] = new float[9];
+		// Récupération des paramètres d'orientation de l'appareil
+		if (mGravity != null && mGeomagnetic != null) {
+			float R[] = new float[9];
+			float I[] = new float[9];
 
-				boolean success = SensorManager.getRotationMatrix(R, I, mGravity, mGeomagnetic);
-				if (success) {
-					float orientation[] = new float[3];
-					SensorManager.getOrientation(R, orientation);
+			boolean success = SensorManager.getRotationMatrix(R, I, mGravity, mGeomagnetic);
+			if (success) {
+				float orientation[] = new float[3];
+				SensorManager.getOrientation(R, orientation);
 
-					// Pitch : angle selon x
-					pitch = (float) Math.toDegrees(orientation[1]);
-				}
+				// Pitch : angle selon x
+				pitch = (float) Math.toDegrees(orientation[1]);
 			}
-		 
-		 ///////////////////////////////////////////////
-		 
+		}
+
+		// /////////////////////////////////////////////
+
 		double rcam = pitch * Math.PI / 180.0;
 		Mat MrcamX = new Mat(3, 3, CvType.CV_32F);
 		MrcamX.put(0, 0, 1);
@@ -187,7 +186,7 @@ public class MatrixTransformations {
 		double resMax = 0;
 		int rotationRepereCamera = 0;
 		Mat MRotationFinale = new Mat(3, 3, CvType.CV_32F);
-		
+
 		for (int i = 0; i < 360; i += 5) {
 			MRotation.put(0, 0, Math.cos(i * Math.PI / 180));
 			MRotation.put(0, 1, -Math.sin(i * Math.PI / 180));
@@ -198,9 +197,9 @@ public class MatrixTransformations {
 			MRotation.put(2, 0, 0);
 			MRotation.put(2, 1, 0);
 			MRotation.put(2, 2, 1);
-			
-//			System.out.println("MATRIX : i=" + i);
-//			displayMatrix(MRotation, "MRotation");
+
+			// System.out.println("MATRIX : i=" + i);
+			// displayMatrix(MRotation, "MRotation");
 
 			Mat Rrotation = new Mat(); // Output de Rodrigues
 			Calib3d.Rodrigues(MRotation, Rrotation);
@@ -229,45 +228,45 @@ public class MatrixTransformations {
 				MRotationFinale.put(2, 2, MRotation.get(2, 2)[0]);
 			}
 		}
-//		displayMatrix(MRotationFinale, "MRotationFinale");
+		// displayMatrix(MRotationFinale, "MRotationFinale");
 
 		Core.gemm(MrcamX, MRotationFinale, 1, new Mat(), 0, MrcamX, 0);
 
-//		displayMatrix(MrcamX, "MrcamX");
+		// displayMatrix(MrcamX, "MrcamX");
 
 		Calib3d.Rodrigues(MrcamX, Rcam);
 		MatOfPoint3f zeroZeroZero = new MatOfPoint3f(new Point3(0, 0, 0));
 		MatOfPoint2f centre = new MatOfPoint2f();
 		Calib3d.projectPoints(zeroZeroZero, Rcam, tvec, cameraMatrix, distCoeffs, centre);
-		
+
 		Mat centerMatrix = new Mat(3, 1, CvType.CV_32F);
 		centerMatrix.put(0, 0, centre.get(0, 0)[0]);
 		centerMatrix.put(1, 0, centre.get(0, 0)[1]);
 		centerMatrix.put(2, 0, 1);
-		
-//		displayMatrix(centerMatrix, "centerMatrix");
+
+		// displayMatrix(centerMatrix, "centerMatrix");
 
 		Mat Ntvec = new Mat(3, 1, CvType.CV_32F);
 		Core.gemm(cameraMatrix.inv(), centerMatrix, 1, new Mat(), 0, Ntvec, 0);
 		double indice = Math.sqrt(Ntvec.get(0, 0)[0] * Ntvec.get(0, 0)[0] + Ntvec.get(1, 0)[0] * Ntvec.get(1, 0)[0] + Ntvec.get(2, 0)[0] * Ntvec.get(2, 0)[0]);
 
 		Core.multiply(Ntvec, new Scalar(indice), Ntvec);
-		
-//		displayMatrix(Ntvec, "Ntvec");
-//		System.out.println("MATRIX : indice="+indice);
+
+		// displayMatrix(Ntvec, "Ntvec");
+		// System.out.println("MATRIX : indice="+indice);
 
 		Mat cameraTranslationVector = new Mat(3, 1, CvType.CV_32F);
 		Core.gemm(MrcamX.inv(), Ntvec, 1, new Mat(), 0, cameraTranslationVector, 0);
-		
-//		displayMatrix(cameraTranslationVector, "cameraTranslationVector");
-		
+
+		// displayMatrix(cameraTranslationVector, "cameraTranslationVector");
+
 		Mat coordonneesClique = new Mat(3, 1, CvType.CV_32F);
 		Core.gemm(cameraMatrix.inv(), touchedPointMatrix, 1, new Mat(), 0, coordonneesClique, 0);
-		
+
 		displayMatrix(coordonneesClique, "coordonneesClique");
-		
+
 		Core.gemm(MrcamX.inv(), coordonneesClique, 1, new Mat(), 0, coordonneesClique, 0);
-		
+
 		displayMatrix(coordonneesClique, "coordonneesClique FINAL");
 
 		double t = -cameraTranslationVector.get(2, 0)[0] / coordonneesClique.get(2, 0)[0];
@@ -308,7 +307,7 @@ public class MatrixTransformations {
 		return intrinsicParametersMatrix;
 
 	}
-	
+
 	protected Mat buildExtrinsicRotationParametersMatrix(SensorManager mSensorManager) {
 
 		// Initialisation du sensor manager
@@ -352,7 +351,7 @@ public class MatrixTransformations {
 
 		return extrinsicRotationParametersMatrix;
 	}
-	
+
 	private static void init(SensorManager mSensorManager) {
 		setAccelerometer(mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER));
 		setMagnetometer(mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD));
@@ -394,7 +393,7 @@ public class MatrixTransformations {
 			line = "";
 		}
 	}
-	
+
 	public Sensor getAccelerometer() {
 		return accelerometer;
 	}

@@ -49,7 +49,7 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 			switch (status) {
 			case LoaderCallbackInterface.SUCCESS: {
 				mOpenCvCameraView.enableView();
-				
+
 				try {
 					detection(getResources().getDisplayMetrics(), null, null, null);
 				} catch (Exception e) {
@@ -146,7 +146,7 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 
 	public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
 
-		 System.out.println("VNCTests : onCameraFrame");
+		System.out.println("VNCTests : onCameraFrame");
 
 		try {
 			detection(getResources().getDisplayMetrics(), null, null, null);
@@ -182,11 +182,11 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 		touchedPointMatrix.put(0, 0, 749); // X ?
 		touchedPointMatrix.put(1, 0, 921); // Y ?
 
-//		Point3 point3D1 = new Point3(0.02210916206240654, 0.0, 0.44615206122398376); // Tête
-//		Point3 point3D2 = new Point3(0.1174665167927742, 0.11092513799667358, 0.27571398019790649); // Bras gauche
-//		Point3 point3D3 = new Point3(0.1174665167927742, -0.11092513799667358, 0.27571398019790649); // Bras droit
-//		Point3 point3D4 = new Point3(0.020062578842043877, 0.08999999612569809, 0.42575448751449585); // Epaule gauche
-//		Point3 point3D5 = new Point3(0, 0, 0); // Entre les deux pieds
+		// Point3 point3D1 = new Point3(0.02210916206240654, 0.0, 0.44615206122398376); // Tête
+		// Point3 point3D2 = new Point3(0.1174665167927742, 0.11092513799667358, 0.27571398019790649); // Bras gauche
+		// Point3 point3D3 = new Point3(0.1174665167927742, -0.11092513799667358, 0.27571398019790649); // Bras droit
+		// Point3 point3D4 = new Point3(0.020062578842043877, 0.08999999612569809, 0.42575448751449585); // Epaule gauche
+		// Point3 point3D5 = new Point3(0, 0, 0); // Entre les deux pieds
 		Point3 point3D1 = new Point3(-0.01538732647895813, -0.0183858722448349, 0.4551582932472229); // Tête
 		Point3 point3D2 = new Point3(0.032784223556518555, 0.10014607757329941, 0.2254450023174286); // Bras gauche
 		Point3 point3D3 = new Point3(0.0391731858253479, -0.11687855422496796, 0.21903225779533386); // Bras droit
