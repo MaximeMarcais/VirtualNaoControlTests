@@ -182,10 +182,15 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 		touchedPointMatrix.put(0, 0, 749); // X ?
 		touchedPointMatrix.put(1, 0, 921); // Y ?
 
-		Point3 point3D1 = new Point3(0.02210916206240654, 0.0, 0.44615206122398376); // Tête
-		Point3 point3D2 = new Point3(0.1174665167927742, 0.11092513799667358, 0.27571398019790649); // Bras gauche
-		Point3 point3D3 = new Point3(0.1174665167927742, -0.11092513799667358, 0.27571398019790649); // Bras droit
-		Point3 point3D4 = new Point3(0.020062578842043877, 0.08999999612569809, 0.42575448751449585); // Epaule gauche
+//		Point3 point3D1 = new Point3(0.02210916206240654, 0.0, 0.44615206122398376); // Tête
+//		Point3 point3D2 = new Point3(0.1174665167927742, 0.11092513799667358, 0.27571398019790649); // Bras gauche
+//		Point3 point3D3 = new Point3(0.1174665167927742, -0.11092513799667358, 0.27571398019790649); // Bras droit
+//		Point3 point3D4 = new Point3(0.020062578842043877, 0.08999999612569809, 0.42575448751449585); // Epaule gauche
+//		Point3 point3D5 = new Point3(0, 0, 0); // Entre les deux pieds
+		Point3 point3D1 = new Point3(-0.01538732647895813, -0.0183858722448349, 0.4551582932472229); // Tête
+		Point3 point3D2 = new Point3(0.032784223556518555, 0.10014607757329941, 0.2254450023174286); // Bras gauche
+		Point3 point3D3 = new Point3(0.0391731858253479, -0.11687855422496796, 0.21903225779533386); // Bras droit
+		Point3 point3D4 = new Point3(-0.016333427280187607, 0.07193655520677567, 0.43833619356155396); // Epaule gauche
 		Point3 point3D5 = new Point3(0, 0, 0); // Entre les deux pieds
 		objectPoints = new MatOfPoint3f(point3D1, point3D2, point3D3, point3D4, point3D5); // Points du robot dans son repère
 
@@ -202,7 +207,7 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 
 		// System.out.println("VNCTests TOUCH : X=" + touchPointInRobotReference.get(0, 0)[0]); // -0.9 m
 		// System.out.println("VNCTests TOUCH : Y=" + touchPointInRobotReference.get(1, 0)[0]); // -0.6 m
-		// System.out.println("VNCTests TOUCH : quelquechose=" + touchPointInRobotReference.get(2, 0)[0]); // Ceci n'es tpas le Z
+		// System.out.println("VNCTests TOUCH : quelquechose=" + touchPointInRobotReference.get(2, 0)[0]); // Ceci n'est pas le Z
 
 		return touchPointInRobotReference;
 
