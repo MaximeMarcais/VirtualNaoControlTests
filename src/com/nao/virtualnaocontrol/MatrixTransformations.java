@@ -257,8 +257,8 @@ public class MatrixTransformations {
 		// float focalLengthInPixel = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_MM, CAMERA_FOCAL_LENGTH*1000, displayMetrics);
 
 		// Coordonnées du centre de l'écran dans notre repère
-		float centreX = (float) (/* displayMetrics.widthPixels */2560 / 2);
-		float centreY = (float) (/* displayMetrics.heightPixels */1920 / 2);
+		float centreX = (float) (displayMetrics.widthPixels / 2);
+		float centreY = (float) (displayMetrics.heightPixels / 2);
 
 		// Initialisation de la matrice des paramètres intrinsèques à la caméra et ajout des composants à la matrice
 		Mat intrinsicParametersMatrix = new Mat(3, 3, CvType.CV_32F);
