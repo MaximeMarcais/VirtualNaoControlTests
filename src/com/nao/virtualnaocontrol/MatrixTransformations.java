@@ -11,13 +11,21 @@ import org.opencv.core.Point3;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.util.DisplayMetrics;
 
 public class MatrixTransformations {
 
 	private final static float CAMERA_FOCAL_LENGTH = 1;// 3.43f; // Exprimée en px
+	private static Sensor accelerometer;
+	private static Sensor magnetometer;
+	private static float[] mGravity;
+	private static float[] mGeomagnetic;
 
-	public static Point3 detection(DisplayMetrics displayMetrics, MatOfPoint3f objectPoints, MatOfPoint2f imagePoints, Mat touchedPointMatrix) throws Exception {
+	public static Point3 detection(SensorManager mSensorManager, DisplayMetrics displayMetrics, MatOfPoint3f objectPoints, MatOfPoint2f imagePoints, Mat touchedPointMatrix) throws Exception {
 
 		if (displayMetrics == null || objectPoints == null || imagePoints == null || touchedPointMatrix == null)
 			throw new Exception("VNC ERROR : Null parameter in detection.");
@@ -106,7 +114,32 @@ public class MatrixTransformations {
 		// APPLICATION DU CARSENAT
 		// ///////////////////////
 
-		double rcam = 110 * Math.PI / 180.0;
+		 // ///////////////////////////////////////////////
+		 
+		// Initialisation du sensor manager
+			init(mSensorManager);
+
+			// Initialisation des angles d'orientation de l'appareil
+			float pitch = 0.0f;
+
+			// Récupération des paramètres d'orientation de l'appareil
+			if (mGravity != null && mGeomagnetic != null) {
+				float R[] = new float[9];
+				float I[] = new float[9];
+
+				boolean success = SensorManager.getRotationMatrix(R, I, mGravity, mGeomagnetic);
+				if (success) {
+					float orientation[] = new float[3];
+					SensorManager.getOrientation(R, orientation);
+
+					// Pitch : angle selon x
+					pitch = (float) Math.toDegrees(orientation[1]);
+				}
+			}
+		 
+		 ///////////////////////////////////////////////
+		 
+		double rcam = pitch * Math.PI / 180.0;
 		Mat MrcamX = new Mat(3, 3, CvType.CV_32F);
 		MrcamX.put(0, 0, 1);
 		MrcamX.put(0, 1, 0);
@@ -275,6 +308,80 @@ public class MatrixTransformations {
 		return intrinsicParametersMatrix;
 
 	}
+	
+	protected Mat buildExtrinsicRotationParametersMatrix(SensorManager mSensorManager) {
+
+		// Initialisation du sensor manager
+		init(mSensorManager);
+
+		// Initialisation des angles d'orientation de l'appareil
+		float pitch = 0.0f;
+		float roll = 0.0f;
+		float azimuth = 0.0f;
+
+		// Récupération des paramètres d'orientation de l'appareil
+		if (mGravity != null && mGeomagnetic != null) {
+			float R[] = new float[9];
+			float I[] = new float[9];
+
+			boolean success = SensorManager.getRotationMatrix(R, I, mGravity, mGeomagnetic);
+			if (success) {
+				float orientation[] = new float[3];
+				SensorManager.getOrientation(R, orientation);
+
+				// Pitch : angle selon x
+				pitch = (float) Math.toDegrees(orientation[1]);
+				// Roll : angle selon y
+				roll = (float) Math.toDegrees(orientation[2]);
+				// Azimuth : angle selon z
+				azimuth = (float) Math.toDegrees(orientation[0]);
+			}
+		}
+
+		// Initialisation de la matrice des paramètres intrinsèques à la caméra et ajout des composants à la matrice
+		Mat extrinsicRotationParametersMatrix = new Mat(3, 3, CvType.CV_32F);
+		extrinsicRotationParametersMatrix.put(0, 0, Math.cos(azimuth) * Math.cos(roll));
+		extrinsicRotationParametersMatrix.put(0, 1, Math.cos(azimuth) * Math.sin(roll) * Math.sin(pitch) - Math.sin(azimuth) * Math.cos(pitch));
+		extrinsicRotationParametersMatrix.put(0, 2, Math.cos(azimuth) * Math.sin(roll) * Math.cos(pitch) + Math.sin(azimuth) * Math.sin(pitch));
+		extrinsicRotationParametersMatrix.put(1, 0, Math.sin(azimuth) * Math.cos(roll));
+		extrinsicRotationParametersMatrix.put(1, 1, Math.sin(azimuth) * Math.sin(roll) * Math.sin(pitch) + Math.cos(azimuth) * Math.cos(pitch));
+		extrinsicRotationParametersMatrix.put(1, 2, Math.sin(azimuth) * Math.sin(roll) * Math.cos(pitch) - Math.cos(azimuth) * Math.sin(pitch));
+		extrinsicRotationParametersMatrix.put(2, 0, -Math.sin(roll));
+		extrinsicRotationParametersMatrix.put(2, 1, Math.cos(roll) * Math.sin(pitch));
+		extrinsicRotationParametersMatrix.put(2, 2, Math.cos(roll) * Math.cos(pitch));
+
+		return extrinsicRotationParametersMatrix;
+	}
+	
+	private static void init(SensorManager mSensorManager) {
+		setAccelerometer(mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER));
+		setMagnetometer(mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD));
+
+		// Listen
+		mSensorManager.registerListener(sel, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+		mSensorManager.registerListener(sel, magnetometer, SensorManager.SENSOR_DELAY_NORMAL);
+	}
+
+	private static SensorEventListener sel = new SensorEventListener() {
+
+		@Override
+		public void onAccuracyChanged(Sensor sensor, int accuracy) {
+			// System.out.println("VNCTests : onAccuracyChanged");
+		}
+
+		@Override
+		public void onSensorChanged(SensorEvent event) {
+			// System.out.println("VNCTests : onSensorChanged");
+			if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+				mGravity = event.values;
+				// System.out.println("VNCTests : Orientation mGravity = " + mGravity);
+			}
+			if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
+				mGeomagnetic = event.values;
+				// System.out.println("VNCTests : Orientation mGeomagnetic = " + mGeomagnetic);
+			}
+		}
+	};
 
 	public static void displayMatrix(Mat matrix, String name) {
 		System.out.println("MATRIX : " + name);
@@ -286,5 +393,22 @@ public class MatrixTransformations {
 			System.out.println("MATRIX : " + line);
 			line = "";
 		}
+	}
+	
+	public Sensor getAccelerometer() {
+		return accelerometer;
+	}
+
+	public Sensor getMagnetometer() {
+		return magnetometer;
+	}
+
+	private static void setMagnetometer(Sensor defaultSensor) {
+		magnetometer = defaultSensor;
+
+	}
+
+	private static void setAccelerometer(Sensor defaultSensor) {
+		accelerometer = defaultSensor;
 	}
 }

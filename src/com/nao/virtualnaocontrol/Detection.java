@@ -201,7 +201,8 @@ public class Detection extends Activity implements CvCameraViewListener2 {
 		Point point2D5 = new Point(1641, 1641); // Entre les deux pieds
 		imagePoints = new MatOfPoint2f(point2D1, point2D2, point2D3, point2D4, point2D5); // Points du robot dans le repère de la caméra
 
-		Point3 touchPointInRobotReference = MatrixTransformations.detection(displayMetrics, objectPoints, imagePoints, touchedPointMatrix);
+		SensorManager mSensorManager = null;
+		Point3 touchPointInRobotReference = MatrixTransformations.detection(mSensorManager, displayMetrics, objectPoints, imagePoints, touchedPointMatrix);
 
 		System.out.println("VNCTests TOUCH : " + touchPointInRobotReference);
 
